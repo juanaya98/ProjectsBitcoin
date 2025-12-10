@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-e43f8b6a57f8f564de9425c5196016539315da0c",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/SimpleVault.sol": "project/contracts/SimpleVault.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/SimpleVault.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ncontract SimpleVault {\n    uint256 private _status;\n    bool private _paused;\n    address public immutable owner;\n\n    event Paused(address indexed by);\n    event Unpaused(address indexed by);\n\n    modifier nonReentrant() {\n        require(_status != 2, \"reentrancy\");\n        _status = 2;\n        _;\n        _status = 1;\n    }\n\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"not owner\");\n        _;\n    }\n\n    modifier whenNotPaused() {\n        require(!_paused, \"paused\");\n        _;\n    }\n\n    mapping(address => uint256) private _balances;\n    uint256 public totalDeposits;\n\n    event Deposit(address indexed user, uint256 amount);\n    event Withdraw(address indexed user, uint256 amount);\n\n    constructor() {\n        owner = msg.sender;\n        _status = 1;\n        _paused = false;\n    }\n\n    function pause() external onlyOwner {\n        _paused = true;\n        emit Paused(msg.sender);\n    }\n\n    function unpause() external onlyOwner {\n        _paused = false;\n        emit Unpaused(msg.sender);\n    }\n\n    function paused() external view returns (bool) {\n        return _paused;\n    }\n\n    function deposit() public payable whenNotPaused {\n        require(msg.value > 0, \"zero value\");\n        _balances[msg.sender] += msg.value;\n        totalDeposits += msg.value;\n        emit Deposit(msg.sender, msg.value);\n    }\n\n    receive() external payable {\n        require(!_paused, \"paused\");\n        require(msg.value > 0, \"zero value\");\n        _balances[msg.sender] += msg.value;\n        totalDeposits += msg.value;\n        emit Deposit(msg.sender, msg.value);\n    }\n\n    function withdraw(uint256 amount) external nonReentrant whenNotPaused {\n        require(amount > 0, \"zero amount\");\n        uint256 bal = _balances[msg.sender];\n        require(bal >= amount, \"insufficient balance\");\n        _balances[msg.sender] = bal - amount;\n        totalDeposits -= amount;\n\n        (bool ok, ) = msg.sender.call{value: amount}(\"\");\n        require(ok, \"transfer failed\");\n\n        emit Withdraw(msg.sender, amount);\n    }\n\n    function balanceOf(address user) external view returns (uint256) {\n        return _balances[user];\n    }\n}\n"
+      }
+    }
+  }
+}
