@@ -8,6 +8,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { formatEther, parseAbiItem, parseEther } from "viem";
+import "./App.css";
 
 // Asegúrate de que este path existe y es el ABI actualizado de SimpleVault
 import vaultJson from "./abi/SimpleVault.json";
@@ -243,162 +244,139 @@ function App() {
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1>SimpleVault – Proyecto 2</h1>
+    <div className="app-container">
+      <div className="header">
+        <h1>SimpleVault</h1>
+        <p>Secure Ethereum Vault DApp</p>
+      </div>
 
-      {!isConnected && (
-        <button
-          onClick={handleConnectClick}
-          disabled={isConnecting || connectors.length === 0}
-        >
-          {isConnecting ? "Connecting..." : "Connect Wallet"}
-        </button>
-      )}
+      <div className="content-wrapper">
+        {!isConnected && (
+          <div className="connect-section">
+            <div className="glass-card">
+              <h2>Connect Your Wallet</h2>
+              <p>Connect your MetaMask wallet to start using SimpleVault</p>
+              <button
+                className="btn btn-primary"
+                onClick={handleConnectClick}
+                disabled={isConnecting || connectors.length === 0}
+              >
+                {isConnecting ? "Connecting..." : "Connect Wallet"}
+              </button>
+            </div>
+          </div>
+        )}
 
-      {isConnected && (
-        <>
-          <p>Connected as: {address}</p>
-          <button onClick={() => disconnect()}>Disconnect</button>
-
-          <hr style={{ margin: "1.5rem 0" }} />
-
-          {lockPeriodSeconds !== null && (
-            <p>
-              Lock period: {lockPeriodSeconds} seconds after the last deposit.
-            </p>
-          )}
-
-          <p>
-            Your vault balance:{" "}
-            {isLoadingBalance ? "Loading..." : `${balanceEth} ETH`}
-          </p>
-
-          <div style={{ marginTop: "1rem" }}>
-            <h3>Deposit</h3>
-            <input
-              type="text"
-              value={depositAmount}
-              onChange={(e) => setDepositAmount(e.target.value)}
-              style={{ marginRight: "0.5rem" }}
-            />
-            <button onClick={handleDeposit} disabled={isWriting}>
-              {isWriting ? "Sending tx..." : "Deposit"}
-            </button>
+        {isConnected && (
+          <>
+          <div className="wallet-info">
+            <div className="wallet-info-content">
+              <div className="wallet-label">Connected Wallet</div>
+              <div className="address-badge">{address}</div>
+            </div>
+            <button className="btn btn-secondary" onClick={() => disconnect()}>Disconnect</button>
           </div>
 
-          <div style={{ marginTop: "1rem" }}>
-            <h3>Withdraw</h3>
-            <input
-              type="text"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              style={{ marginRight: "0.5rem" }}
-            />
-            <button onClick={handleWithdraw} disabled={isWriting}>
-              {isWriting ? "Sending tx..." : "Withdraw"}
-            </button>
+          <div className="balance-display">
+            <div className="balance-label">Your Balance in Vault</div>
+            <div className="balance-amount">
+              {isLoadingBalance ? "Loading..." : `${balanceEth} ETH`}
+            </div>
+            {lockPeriodSeconds !== null && (
+              <div className="lock-info">
+                🔒 Lock period: {lockPeriodSeconds} seconds after deposit
+              </div>
+            )}
+          </div>
+
+          <div className="actions-grid">
+            <div className="action-card">
+              <h3>Deposit ETH</h3>
+              <div className="input-wrapper">
+                <label className="input-label">Amount (ETH)</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="0.0"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                />
+              </div>
+              <button className="btn btn-primary" onClick={handleDeposit} disabled={isWriting}>
+                {isWriting ? "Sending tx..." : "Deposit"}
+              </button>
+            </div>
+
+            <div className="action-card">
+              <h3>Withdraw ETH</h3>
+              <div className="input-wrapper">
+                <label className="input-label">Amount (ETH)</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="0.0"
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                />
+              </div>
+              <button className="btn btn-primary" onClick={handleWithdraw} disabled={isWriting}>
+                {isWriting ? "Sending tx..." : "Withdraw"}
+              </button>
+            </div>
           </div>
 
           {txMessage && (
-            <p style={{ marginTop: "0.75rem" }}>
+            <div className="message success">
               {txMessage}
-            </p>
+            </div>
           )}
 
-          <div style={{ marginTop: "2rem" }}>
-            <h3>Transaction History</h3>
+          <div className="history-section">
+            <h2>Transaction History</h2>
 
-            {isLoadingHistory && <p>Loading history...</p>}
+            {isLoadingHistory && <div className="loading">Loading history...</div>}
             {historyError && (
-              <p style={{ color: "red" }}>{historyError}</p>
+              <div className="message error">{historyError}</div>
             )}
 
             {!isLoadingHistory &&
               history.length === 0 &&
               !historyError && (
-                <p>No transactions found for this account.</p>
+                <div className="empty-state">No transactions found for this account.</div>
               )}
 
             {history.length > 0 && (
-              <table
-                style={{
-                  marginTop: "0.5rem",
-                  borderCollapse: "collapse",
-                  width: "100%",
-                  maxWidth: "700px",
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th
-                      style={{
-                        borderBottom: "1px solid #ccc",
-                        textAlign: "left",
-                        padding: "4px",
-                      }}
-                    >
-                      Type
-                    </th>
-                    <th
-                      style={{
-                        borderBottom: "1px solid #ccc",
-                        textAlign: "left",
-                        padding: "4px",
-                      }}
-                    >
-                      Amount (ETH)
-                    </th>
-                    <th
-                      style={{
-                        borderBottom: "1px solid #ccc",
-                        textAlign: "left",
-                        padding: "4px",
-                      }}
-                    >
-                      Tx Hash
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((entry, idx) => (
-                    <tr key={idx}>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #eee",
-                          padding: "4px",
-                        }}
-                      >
-                        {entry.txType}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #eee",
-                          padding: "4px",
-                        }}
-                      >
-                        {entry.amountEth}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #eee",
-                          padding: "4px",
-                          maxWidth: "260px",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                        title={entry.txHash}
-                      >
-                        {entry.txHash}
-                      </td>
+              <div className="table-wrapper">
+                <table className="history-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Amount (ETH)</th>
+                      <th>Tx Hash</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {history.map((entry, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <span className={`tx-badge ${entry.txType.toLowerCase()}`}>
+                            {entry.txType}
+                          </span>
+                        </td>
+                        <td>{entry.amountEth}</td>
+                        <td className="tx-hash" title={entry.txHash}>
+                          {entry.txHash}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }
