@@ -1,57 +1,133 @@
-# Sample Hardhat 3 Beta Project (`node:test` and `viem`)
+# SimpleVault – Proyecto 1
 
-This project showcases a Hardhat 3 Beta project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+DApp para gestionar depósitos y retiros de ETH mediante un smart contract en Solidity. El proyecto incluye el contrato, deployment con Hardhat Ignition, y un frontend en React que conecta con MetaMask usando wagmi/viem.
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+**Funcionalidades:**
+- Depositar ETH en la bóveda
+- Retirar fondos depositados
+- Consultar balance del usuario
+- Interacción completa con MetaMask
 
-## Project Overview
+---
 
-This example project includes:
+## Estructura
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
-
-## Usage
-
-### Running Tests
-
-To run all the tests in the project, execute the following command:
-
-```shell
-npx hardhat test
+```
+simplevault-project/
+├── contracts/
+│   └── SimpleVault.sol
+├── ignition/modules/
+│   └── SimpleVaultModule.mjs
+├── frontend/
+│   └── src/
+│       ├── App.tsx
+│       └── main.tsx
+└── hardhat.config.ts
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+---
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
+## El Contrato
+
+`SimpleVault.sol` es una bóveda de ETH con las siguientes funciones:
+
+- **deposit()**: Recibe ETH y actualiza el balance del usuario
+- **withdraw(uint256 amount)**: Permite retirar fondos
+- **balanceOf(address user)**: Devuelve el balance disponible
+
+**Seguridad:**
+- Protección contra reentrancy con `nonReentrant`
+- Sistema pausable (onlyOwner)
+- Transferencias seguras con `call`
+
+Emite eventos `Deposited` y `Withdrawn` para tracking.
+
+---
+
+## Setup
+
+**1. Iniciar nodo Hardhat**
+
+```bash
+npx hardhat node
 ```
 
-### Make a deployment to Sepolia
+Esto levanta una blockchain local en `http://127.0.0.1:8545` (Chain ID: 31337) con 20 cuentas de 10,000 ETH.
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+**2. Desplegar el contrato**
 
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+```bash
+npx hardhat ignition deploy ignition/modules/SimpleVaultModule.mjs --network localhost
 ```
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+Copia la dirección del contrato desplegado y actualízala en `frontend/src/App.tsx`:
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+```typescript
+const VAULT_ADDRESS = "0xABC123...";
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+**3. Configurar MetaMask**
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
+Agregar la red local:
+- Network Name: Hardhat Localhost
+- RPC URL: http://127.0.0.1:8545
+- Chain ID: 31337
+- Currency: ETH
+
+Importar una cuenta de prueba (Account #0):
 ```
+0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+```
+
+**4. Correr el frontend**
+
+```bash
+cd frontend
+npm run dev
+```
+
+Abrir http://localhost:5173
+
+---
+
+## Uso
+
+**Conectar wallet**
+
+Hacer clic en "Connect Wallet" y seleccionar la cuenta importada. Debería verse algo como:
+```
+Connected as: 0xF39F...
+Your vault balance: 0 ETH
+```
+
+**Depositar**
+
+1. Ingresar cantidad (ej: 0.02)
+2. Click en "Deposit"
+3. Confirmar en MetaMask
+4. Esperar confirmación
+
+**Retirar**
+
+1. Ingresar cantidad (ej: 0.005)
+2. Click en "Withdraw"
+3. Confirmar en MetaMask
+
+El balance se actualiza automáticamente después de cada transacción.
+
+---
+
+## Tech Stack
+
+- Solidity 0.8.28
+- Hardhat + Hardhat Ignition
+- React + TypeScript
+- Vite
+- wagmi + viem
+- MetaMask
+
+## Notas
+
+Este proyecto fue desarrollado como parte del curso de DApps & Smart Contracts. El objetivo era crear un smart contract funcional, desplegarlo localmente y conectarlo a un frontend para realizar transacciones reales.
+
+Las principales dificultades fueron configurar correctamente wagmi con viem y manejar los estados de las transacciones en el frontend. También implementé protecciones básicas contra reentrancy y añadí la funcionalidad pausable por si se necesita en el futuro.
